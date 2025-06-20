@@ -73,7 +73,24 @@ source ~/.bashrc  # または source ~/.zshrc
 
 ```bash
 # プロジェクト作成（TypeScript使用）
+npx @react-native-community/cli@latest init SimpleSolanaMobileApp --template react-native-template-typescript
+
+# 上記でエラーが出る場合は、以下の方法を試してください：
+
+# 方法1: 最新のCLIを使用
+npm install -g @react-native-community/cli@latest
 npx @react-native-community/cli init SimpleSolanaMobileApp --template react-native-template-typescript
+
+# 方法2: デフォルトテンプレートを使用してから手動でTypeScript追加
+npx @react-native-community/cli init SimpleSolanaMobileApp
+cd SimpleSolanaMobileApp
+npm install --save-dev typescript @types/react @types/react-native
+# 後でtsconfig.jsonを手動作成
+
+# 方法3: Expo CLI を使用（推奨）
+npm install -g @expo/cli
+npx create-expo-app SimpleSolanaMobileApp --template blank-typescript
+cd SimpleSolanaMobileApp
 
 # プロジェクトディレクトリに移動
 cd SimpleSolanaMobileApp
@@ -884,6 +901,20 @@ npx react-native run-ios
 ## トラブルシューティング
 
 ### よくある問題と解決方法
+
+#### 0. プロジェクト作成エラー
+
+**エラー:** `template.config.js file inside "react-native" template`が見つからない
+
+**解決方法:**
+```bash
+# キャッシュクリアしてから再実行
+npm cache clean --force
+npx @react-native-community/cli@latest init SimpleSolanaMobileApp
+
+# または最も確実なExpo使用
+npx create-expo-app SimpleSolanaMobileApp --template blank-typescript
+```
 
 #### 1. Metro bundlerエラー
 ```bash
