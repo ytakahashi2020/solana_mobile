@@ -1,982 +1,379 @@
 # Solana Mobile Wallet App 作成マニュアル
 
-React Native初心者向けの詳細なSolanaモバイルウォレットアプリ構築ガイドです。このマニュアルに従って作業すれば、全く同じアプリを作成できます。
+Solana Mobile公式ドキュメントに基づくReact Nativeアプリ構築ガイドです。
 
 ## 目次
 
-1. [環境構築](#環境構築)
-2. [プロジェクト作成](#プロジェクト作成)
-3. [依存関係のインストール](#依存関係のインストール)
-4. [基本ファイル構成](#基本ファイル構成)
-5. [コンポーネント作成](#コンポーネント作成)
-6. [メイン画面の実装](#メイン画面の実装)
-7. [スタイリング](#スタイリング)
-8. [ビルドと実行](#ビルドと実行)
-9. [トラブルシューティング](#トラブルシューティング)
+1. [前提条件](#前提条件)
+2. [開発環境セットアップ](#開発環境セットアップ)
+3. [プロジェクト作成方法](#プロジェクト作成方法)
+4. [アプリの実装](#アプリの実装)
+5. [ビルドと実行](#ビルドと実行)
+6. [トラブルシューティング](#トラブルシューティング)
 
-## 環境構築
+## 前提条件
 
-### 1. 必要なソフトウェアのインストール
+### 必要なもの
+- **Android開発環境**（Solana MobileはAndroidのみサポート）
+- **Androidデバイスまたはエミュレーター**
+- **MWA対応ウォレットアプリ**（例：Phantom, Solflare）
 
-#### Node.js (バージョン 18以上推奨)
-```bash
-# Node.jsのバージョン確認
-node --version
-
-# npmのバージョン確認
-npm --version
-```
-
-#### React Native CLI
-```bash
-# React Native CLIをグローバルにインストール
-npm install -g @react-native-community/cli
-```
-
-#### 開発環境（以下のいずれかを選択）
-
-**Android開発環境:**
+### 推奨開発環境
+- Node.js 18.x 以上
 - Android Studio
-- Android SDK
-- Java Development Kit (JDK) 11
+- Java Development Kit (JDK) 17
+- Yarn（パッケージ管理はyarnを推奨）
 
-**iOS開発環境（Macのみ）:**
-- Xcode 14以上
-- iOS Simulator
+## 開発環境セットアップ
 
-### 2. Android開発環境の詳細設定
+### 1. Android開発環境
 
-#### Android Studioのインストール
-1. [Android Studio](https://developer.android.com/studio)をダウンロード
-2. インストーラーを実行し、標準インストールを選択
-3. SDK Manager で以下をインストール：
-   - Android SDK Platform 33
-   - Android SDK Build-Tools
-   - Android Emulator
-
-#### 環境変数の設定
 ```bash
-# ~/.bashrc または ~/.zshrc に追加
+# Android Studioをインストール
+# https://developer.android.com/studio からダウンロード
+
+# Android SDK設定
 export ANDROID_HOME=$HOME/Library/Android/sdk
 export PATH=$PATH:$ANDROID_HOME/emulator
 export PATH=$PATH:$ANDROID_HOME/platform-tools
 ```
 
-変更後、ターミナルを再起動するか以下を実行：
+### 2. 必要なツールのインストール
+
 ```bash
-source ~/.bashrc  # または source ~/.zshrc
+# Yarnをインストール（推奨）
+npm install -g yarn
+
+# React Native CLIをインストール
+npm install -g @react-native-community/cli
 ```
 
-## プロジェクト作成
+## プロジェクト作成方法
 
-### 1. 新しいReact Nativeプロジェクトを作成
+Solana Mobile公式では2つの方法を提供しています：
+
+### 方法1: Expo Template（推奨）
 
 ```bash
-# プロジェクト作成（TypeScript使用）
-npx @react-native-community/cli@latest init SimpleSolanaMobileApp --template react-native-template-typescript
-
-# 上記でエラーが出る場合は、以下の方法を試してください：
-
-# 方法1: 最新のCLIを使用
-npm install -g @react-native-community/cli@latest
-npx @react-native-community/cli init SimpleSolanaMobileApp --template react-native-template-typescript
-
-# 方法2: デフォルトテンプレートを使用してから手動でTypeScript追加
-npx @react-native-community/cli init SimpleSolanaMobileApp
-cd SimpleSolanaMobileApp
-npm install --save-dev typescript @types/react @types/react-native
-# 後でtsconfig.jsonを手動作成
-
-# 方法3: Expo CLI を使用（推奨）
-npm install -g @expo/cli
-npx create-expo-app SimpleSolanaMobileApp --template blank-typescript
-cd SimpleSolanaMobileApp
+# Solana Mobile Expo テンプレートを使用
+yarn create expo-app MySolanaDapp --template @solana-mobile/solana-mobile-expo-template
 
 # プロジェクトディレクトリに移動
-cd SimpleSolanaMobileApp
+cd MySolanaDapp
+
+# 依存関係をインストール
+yarn install
 ```
 
-### 2. プロジェクト構造の確認
-
-作成されたプロジェクトの基本構造：
-```
-SimpleSolanaMobileApp/
-├── android/          # Androidプロジェクトファイル
-├── ios/             # iOSプロジェクトファイル
-├── src/             # ソースコード（作成予定）
-├── App.tsx          # メインアプリファイル
-├── index.js         # エントリーポイント
-└── package.json     # 依存関係とスクリプト
-```
-
-## 依存関係のインストール
-
-### 1. Solana関連パッケージ
+### 方法2: React Native Scaffold
 
 ```bash
-# Solana Web3.js
-npm install @solana/web3.js
+# Solana Mobile React Native テンプレートを使用
+npx react-native init MySolanaDapp --template @solana-mobile/solana-mobile-dapp-scaffold --npm
 
-# Solana Mobile Wallet Adapter
-npm install @solana-mobile/mobile-wallet-adapter-protocol-web3js
-npm install @solana-mobile/mobile-wallet-adapter-protocol
+# プロジェクトディレクトリに移動
+cd MySolanaDapp
 
-# Buffer polyfill（React Nativeで必要）
-npm install buffer
+# Yarnで依存関係を再インストール（推奨）
+rm -rf node_modules package-lock.json
+yarn install
 ```
 
-### 2. React Native関連パッケージ
+## アプリの実装
 
-```bash
-# クリップボード機能
-npm install @react-native-clipboard/clipboard
+### 1. 基本的なファイル構成
 
-# AsyncStorage（データ永続化）
-npm install @react-native-async-storage/async-storage
+公式テンプレートには以下が含まれています：
 
-# 注意: @types/bufferは存在しないパッケージです
-# bufferパッケージには既に型定義が含まれているため不要
 ```
-
-### 3. Metro設定（重要）
-
-`metro.config.js`ファイルを以下の内容で作成または更新：
-
-```javascript
-const {getDefaultConfig} = require('metro-config');
-
-module.exports = (async () => {
-  const {
-    resolver: {sourceExts, assetExts},
-  } = await getDefaultConfig();
-  return {
-    transformer: {
-      getTransformOptions: async () => ({
-        transform: {
-          experimentalImportSupport: false,
-          inlineRequires: true,
-        },
-      }),
-    },
-    resolver: {
-      assetExts: assetExts.filter(ext => ext !== 'svg'),
-      sourceExts: [...sourceExts, 'svg'],
-      alias: {
-        crypto: 'react-native-crypto',
-      },
-    },
-  };
-})();
-```
-
-### 4. Polyfillの設定
-
-`index.js`ファイルを以下のように更新：
-
-```javascript
-import {AppRegistry} from 'react-native';
-import App from './App';
-import {name as appName} from './app.json';
-
-// Buffer polyfill
-import {Buffer} from 'buffer';
-global.Buffer = global.Buffer || Buffer;
-
-AppRegistry.registerComponent(appName, () => App);
-```
-
-## 基本ファイル構成
-
-### 1. ディレクトリ構造を作成
-
-```bash
-# プロジェクトルートで実行
-mkdir components
-mkdir screens
-mkdir util
-```
-
-最終的なディレクトリ構造：
-```
-SimpleSolanaMobileApp/
+MySolanaDapp/
 ├── components/
-│   ├── providers/
-│   ├── ConnectButton.tsx
-│   ├── MockWalletButton.tsx
-│   ├── MockSendButton.tsx
-│   └── その他のコンポーネント
+│   ├── Account/
+│   ├── AuthorizationProvider.tsx
+│   ├── ConnectionProvider.tsx
+│   └── RequestAirdrop.tsx
 ├── screens/
 │   └── MainScreen.tsx
-├── util/
-│   └── alertAndLog.ts
-└── App.tsx
+├── App.tsx
+└── package.json
 ```
 
-### 2. 設定ファイルの作成
+### 2. 主要コンポーネントの理解
 
-#### `tsconfig.json`（TypeScript設定）
-```json
-{
-  "extends": "@tsconfig/react-native/tsconfig.json",
-  "compilerOptions": {
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "isolatedModules": true,
-    "moduleResolution": "node",
-    "strict": true,
-    "declaration": false,
-    "allowUnreachableCode": false,
-    "allowUnusedLabels": false,
-    "exactOptionalPropertyTypes": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noUncheckedIndexedAccess": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true
-  },
-  "exclude": [
-    "node_modules",
-    "babel.config.js",
-    "metro.config.js",
-    "jest.config.js"
-  ]
-}
-```
-
-## コンポーネント作成
-
-### 1. ユーティリティ関数
-
-#### `util/alertAndLog.ts`
+#### AuthorizationProvider
 ```typescript
-import { Alert } from 'react-native';
+// Mobile Wallet Adapter認証を管理
+import { AuthorizationProvider } from './components/AuthorizationProvider';
 
-export function alertAndLog(title: string, message: string, error?: any) {
-  if (error) {
-    console.error(title, message, error);
-  } else {
-    console.log(title, message);
-  }
-  Alert.alert(title, message);
-}
-```
-
-### 2. プロバイダーコンポーネント
-
-#### `components/providers/ConnectionProvider.tsx`
-```typescript
-import React, { ReactNode, createContext, useContext, useMemo } from 'react';
-import { Connection, clusterApiUrl } from '@solana/web3.js';
-
-export interface ConnectionContextState {
-  connection: Connection;
-}
-
-const ConnectionContext = createContext<ConnectionContextState>({} as ConnectionContextState);
-
-export function useConnection(): ConnectionContextState {
-  return useContext(ConnectionContext);
-}
-
-interface Props {
-  children: ReactNode;
-  endpoint?: string;
-}
-
-export function ConnectionProvider({ children, endpoint = clusterApiUrl('devnet') }: Props) {
-  const connection = useMemo(() => new Connection(endpoint, 'confirmed'), [endpoint]);
-
+function App() {
   return (
-    <ConnectionContext.Provider value={{ connection }}>
-      {children}
-    </ConnectionContext.Provider>
+    <AuthorizationProvider cluster="devnet">
+      {/* Your app content */}
+    </AuthorizationProvider>
   );
 }
 ```
 
-#### `components/providers/AuthorizationProvider.tsx`
+#### ConnectionProvider
 ```typescript
-import React, { ReactNode, createContext, useContext, useState, useCallback } from 'react';
-import { PublicKey } from '@solana/web3.js';
+// Solana RPCコネクションを管理
+import { ConnectionProvider } from './components/ConnectionProvider';
 
-export interface Account {
-  address: string;
-  label?: string;
-  publicKey: PublicKey;
-}
-
-export interface AuthorizationContextState {
-  selectedAccount: Account | null;
-  authorize: () => void;
-  deauthorize: () => void;
-}
-
-const AuthorizationContext = createContext<AuthorizationContextState>({} as AuthorizationContextState);
-
-export function useAuthorization(): AuthorizationContextState {
-  return useContext(AuthorizationContext);
-}
-
-interface Props {
-  children: ReactNode;
-}
-
-export function AuthorizationProvider({ children }: Props) {
-  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
-
-  const authorize = useCallback(() => {
-    // 実際のアプリでは、ここでMobile Wallet Adapterを使用
-    console.log('Authorization requested');
-  }, []);
-
-  const deauthorize = useCallback(() => {
-    setSelectedAccount(null);
-  }, []);
-
-  return (
-    <AuthorizationContext.Provider value={{ selectedAccount, authorize, deauthorize }}>
-      {children}
-    </AuthorizationContext.Provider>
-  );
-}
-```
-
-### 3. UI コンポーネント
-
-#### `components/MockWalletButton.tsx`
-```typescript
-import React, { useState } from 'react';
-import { TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
-import { Keypair, PublicKey } from '@solana/web3.js';
-
-type MockAccount = {
-  address: string;
-  label: string;
-  publicKey: PublicKey;
-  keypair: Keypair;
-};
-
-interface Props {
-  onConnect: (account: MockAccount) => void;
-}
-
-export default function MockWalletButton({ onConnect }: Props) {
-  const [connecting, setConnecting] = useState(false);
-
-  const connectMockWallet = async () => {
-    setConnecting(true);
-    try {
-      // 新しいキーペアを生成（実際のアプリでは既存のウォレットを使用）
-      const keypair = Keypair.generate();
-      const account: MockAccount = {
-        address: keypair.publicKey.toString(),
-        label: 'Mock Wallet',
-        publicKey: keypair.publicKey,
-        keypair: keypair,
-      };
-
-      onConnect(account);
-      Alert.alert('接続成功', 'MockWalletに接続しました');
-    } catch (error) {
-      console.error('Mock wallet connection error:', error);
-      Alert.alert('接続エラー', 'MockWalletの接続に失敗しました');
-    } finally {
-      setConnecting(false);
-    }
-  };
-
-  return (
-    <TouchableOpacity
-      style={[styles.button, connecting && styles.buttonDisabled]}
-      onPress={connectMockWallet}
-      disabled={connecting}
-    >
-      <Text style={styles.buttonText}>
-        {connecting ? '接続中...' : 'CONNECT MOCK WALLET (NO MWA)'}
-      </Text>
-    </TouchableOpacity>
-  );
-}
-
-const styles = StyleSheet.create({
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginVertical: 8,
-  },
-  buttonDisabled: {
-    backgroundColor: '#6c757d',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-});
-```
-
-#### `components/MockSendButton.tsx`
-```typescript
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
-import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL, sendAndConfirmTransaction } from '@solana/web3.js';
-import Clipboard from '@react-native-clipboard/clipboard';
-
-type MockAccount = {
-  address: string;
-  label: string;
-  publicKey: PublicKey;
-  keypair: any;
-};
-
-type Props = {
-  mockAccount: MockAccount;
-  connection: Connection;
-  onSendComplete?: () => void;
-};
-
-export default function MockSendButton({ mockAccount, connection, onSendComplete }: Props) {
-  const [recipientAddress, setRecipientAddress] = useState('');
-  const [amount, setAmount] = useState('');
-  const [sending, setSending] = useState(false);
-
-  const pasteFromClipboard = async () => {
-    try {
-      const clipboardText = await Clipboard.getString();
-      setRecipientAddress(clipboardText);
-    } catch (error) {
-      Alert.alert('エラー', 'クリップボードから貼り付けできませんでした');
-    }
-  };
-
-  const sendSOL = async () => {
-    if (!recipientAddress || !amount) {
-      Alert.alert('エラー', '送付先アドレスと金額を入力してください');
-      return;
-    }
-
-    const amountInSOL = parseFloat(amount);
-    if (isNaN(amountInSOL) || amountInSOL <= 0) {
-      Alert.alert('エラー', '有効な金額を入力してください');
-      return;
-    }
-
-    setSending(true);
-    try {
-      // 送付先アドレスの検証
-      const toPublicKey = new PublicKey(recipientAddress);
-      
-      // 残高確認
-      const balance = await connection.getBalance(mockAccount.publicKey);
-      const amountInLamports = amountInSOL * LAMPORTS_PER_SOL;
-      
-      if (balance < amountInLamports) {
-        Alert.alert('エラー', '残高が不足しています');
-        setSending(false);
-        return;
-      }
-
-      // トランザクション作成
-      const transaction = new Transaction().add(
-        SystemProgram.transfer({
-          fromPubkey: mockAccount.publicKey,
-          toPubkey: toPublicKey,
-          lamports: amountInLamports,
-        })
-      );
-
-      // トランザクション送信
-      const signature = await sendAndConfirmTransaction(
-        connection,
-        transaction,
-        [mockAccount.keypair]
-      );
-
-      Alert.alert(
-        '送信完了',
-        `${amountInSOL} SOLを正常に送信しました\n\nトランザクションID:\n${signature}`
-      );
-
-      // フォームをリセット
-      setRecipientAddress('');
-      setAmount('');
-      
-      if (onSendComplete) {
-        onSendComplete();
-      }
-    } catch (error: any) {
-      console.error('送信エラー:', error);
-      Alert.alert('送信エラー', error.message || '送信に失敗しました');
-    } finally {
-      setSending(false);
-    }
-  };
-
-  return (
-    <View style={styles.container}>
-      <Text style={styles.label}>送付先アドレス:</Text>
-      <View style={styles.addressInputContainer}>
-        <TextInput
-          style={styles.addressInput}
-          value={recipientAddress}
-          onChangeText={setRecipientAddress}
-          placeholder="送付先アドレスを入力"
-          multiline
-        />
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.pasteButton} onPress={pasteFromClipboard}>
-            <Text style={styles.pasteButtonText}>貼付</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.selfButton} onPress={() => {
-            setRecipientAddress(mockAccount.publicKey.toString());
-          }}>
-            <Text style={styles.selfButtonText}>自分</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.testButton} onPress={() => {
-            // テスト用の有効なdevnetアドレス
-            setRecipientAddress('11111111111111111111111111111112');
-          }}>
-            <Text style={styles.testButtonText}>テスト</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <Text style={styles.label}>金額 (SOL):</Text>
-      <TextInput
-        style={styles.amountInput}
-        value={amount}
-        onChangeText={setAmount}
-        placeholder="0.0"
-        keyboardType="numeric"
-      />
-
-      <TouchableOpacity
-        style={[styles.sendButton, sending && styles.sendButtonDisabled]}
-        onPress={sendSOL}
-        disabled={sending}
-      >
-        <Text style={styles.sendButtonText}>
-          {sending ? '送信中...' : 'SOL送付'}
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 0,
-    margin: 0,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#333',
-  },
-  addressInputContainer: {
-    marginBottom: 16,
-  },
-  addressInput: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 4,
-    padding: 12,
-    fontSize: 14,
-    backgroundColor: '#fff',
-    marginBottom: 8,
-    minHeight: 50,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  pasteButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 4,
-    justifyContent: 'center',
-    flex: 1,
-  },
-  pasteButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  selfButton: {
-    backgroundColor: '#28a745',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 4,
-    justifyContent: 'center',
-    flex: 1,
-  },
-  selfButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  testButton: {
-    backgroundColor: '#ffc107',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 4,
-    justifyContent: 'center',
-    flex: 1,
-  },
-  testButtonText: {
-    color: '#212529',
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  amountInput: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 4,
-    padding: 12,
-    fontSize: 16,
-    backgroundColor: '#fff',
-    marginBottom: 16,
-  },
-  sendButton: {
-    backgroundColor: '#28a745',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  sendButtonDisabled: {
-    backgroundColor: '#6c757d',
-  },
-  sendButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-});
-```
-
-## メイン画面の実装
-
-### `screens/MainScreen.tsx`
-
-```typescript
-import React, { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View, Button, TouchableOpacity, Alert } from 'react-native';
-
-import { useConnection } from '../components/providers/ConnectionProvider';
-import MockWalletButton from '../components/MockWalletButton';
-import MockSendButton from '../components/MockSendButton';
-
-export default function MainScreen() {
-  const { connection } = useConnection();
-  const [mockAccount, setMockAccount] = useState<any>(null);
-  const [mockBalance, setMockBalance] = useState<number | null>(null);
-
-  const fetchMockBalance = useCallback(async () => {
-    if (mockAccount) {
-      try {
-        const fetchedBalance = await connection.getBalance(mockAccount.publicKey);
-        setMockBalance(fetchedBalance);
-      } catch (error) {
-        console.error('Mock残高取得エラー:', error);
-      }
-    }
-  }, [connection, mockAccount]);
-
-  useEffect(() => {
-    if (mockAccount) {
-      fetchMockBalance();
-      // 10秒ごとに自動更新
-      const interval = setInterval(fetchMockBalance, 10000);
-      return () => clearInterval(interval);
-    }
-  }, [fetchMockBalance, mockAccount]);
-
-  return (
-    <>
-      <ScrollView style={styles.mainContainer} contentContainerStyle={styles.scrollContainer}>
-        {mockAccount ? (
-          <View style={styles.mockWalletInfo}>
-            <Text style={styles.mockWalletTitle}>MockWallet接続済み</Text>
-            <Text style={styles.addressLabel}>ウォレットアドレス:</Text>
-            <Text style={styles.addressText}>{mockAccount.publicKey.toString()}</Text>
-            <TouchableOpacity style={styles.consoleButton} onPress={() => {
-                console.log('=== MockWallet Address ===');
-                console.log(mockAccount.publicKey.toString());
-                console.log('========================');
-                Alert.alert(
-                  'アドレス表示',
-                  `MockWalletアドレス:\n\n${mockAccount.publicKey.toString()}\n\nコンソールにも出力しました。\n\n外部ウォレットからこのアドレスにテストSOLを送金してください。`,
-                  [{ text: 'OK' }]
-                );
-              }}>
-                <Text style={styles.consoleButtonText}>📋 詳細表示</Text>
-            </TouchableOpacity>
-            <Text style={styles.mockBalanceText}>
-              残高: {mockBalance !== null ? (mockBalance / 1000000000).toFixed(4) : '取得中...'} SOL
-            </Text>
-            <MockSendButton
-              mockAccount={mockAccount}
-              connection={connection}
-              onSendComplete={fetchMockBalance}
-            />
-            <Button title="MockWallet切断" onPress={() => {
-              setMockAccount(null);
-              setMockBalance(null);
-            }} />
-          </View>
-        ) : (
-          <View>
-            <MockWalletButton onConnect={setMockAccount} />
-          </View>
-        )}
-        <Text style={styles.clusterText}>Selected cluster: {connection.rpcEndpoint}</Text>
-      </ScrollView>
-    </>
-  );
-}
-
-const styles = StyleSheet.create({
-  mainContainer: {
-    flex: 1,
-  },
-  scrollContainer: {
-    padding: 16,
-    paddingBottom: 50,
-  },
-  mockWalletInfo: {
-    padding: 16,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-    margin: 16,
-  },
-  mockWalletTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  addressLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#333',
-  },
-  addressText: {
-    fontSize: 12,
-    fontFamily: 'monospace',
-    marginBottom: 16,
-    color: '#333',
-  },
-  consoleButton: {
-    backgroundColor: '#28a745',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 4,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  consoleButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  mockBalanceText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#28a745',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  clusterText: {
-    fontSize: 12,
-    color: '#666',
-    textAlign: 'center',
-    marginTop: 16,
-    marginBottom: 16,
-  },
-});
-```
-
-### メインアプリファイル `App.tsx`
-
-```typescript
-import React from 'react';
-import { StatusBar, StyleSheet, Text, View } from 'react-native';
-
-import { ConnectionProvider } from './components/providers/ConnectionProvider';
-import { AuthorizationProvider } from './components/providers/AuthorizationProvider';
-import MainScreen from './screens/MainScreen';
-
-function App(): JSX.Element {
+function App() {
   return (
     <ConnectionProvider>
       <AuthorizationProvider>
-        <StatusBar barStyle="light-content" backgroundColor="#6a4c93" />
-        <View style={styles.shell}>
-          <View style={styles.header}>
-            <Text style={styles.headerText}>Solana</Text>
-            <Text style={styles.headerSubText}>React Native</Text>
-          </View>
-          <MainScreen />
-        </View>
+        {/* Your app content */}
+      </AuthorizationProvider>
+    </ConnectionProvider>
+  );
+}
+```
+
+### 3. 基本的なウォレット操作
+
+#### ウォレット接続
+```typescript
+import { useAuthorization } from './components/AuthorizationProvider';
+
+function ConnectWallet() {
+  const { authorizeSession } = useAuthorization();
+  
+  const handleConnect = async () => {
+    try {
+      await authorizeSession();
+    } catch (error) {
+      console.error('Connection failed:', error);
+    }
+  };
+
+  return (
+    <TouchableOpacity onPress={handleConnect}>
+      <Text>ウォレットに接続</Text>
+    </TouchableOpacity>
+  );
+}
+```
+
+#### 残高確認
+```typescript
+import { useConnection } from './components/ConnectionProvider';
+import { useAuthorization } from './components/AuthorizationProvider';
+
+function AccountBalance() {
+  const { connection } = useConnection();
+  const { selectedAccount } = useAuthorization();
+  const [balance, setBalance] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (selectedAccount) {
+      connection.getBalance(selectedAccount.publicKey)
+        .then(balance => setBalance(balance / 1000000000));
+    }
+  }, [connection, selectedAccount]);
+
+  return (
+    <Text>残高: {balance?.toFixed(4)} SOL</Text>
+  );
+}
+```
+
+#### SOL送金
+```typescript
+import { useTransact } from './components/AuthorizationProvider';
+import { SystemProgram, Transaction } from '@solana/web3.js';
+
+function SendTransaction() {
+  const transact = useTransact();
+
+  const sendSOL = async (toAddress: string, amount: number) => {
+    try {
+      const transaction = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: selectedAccount.publicKey,
+          toPubkey: new PublicKey(toAddress),
+          lamports: amount * 1000000000, // SOLからlamportsに変換
+        })
+      );
+
+      const signature = await transact(transaction);
+      console.log('Transaction signature:', signature);
+    } catch (error) {
+      console.error('Transaction failed:', error);
+    }
+  };
+
+  return (
+    // UI implementation
+  );
+}
+```
+
+### 4. メイン画面の実装
+
+```typescript
+// screens/MainScreen.tsx
+import React from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { AuthorizationProvider } from '../components/AuthorizationProvider';
+import { ConnectionProvider } from '../components/ConnectionProvider';
+import ConnectWallet from '../components/ConnectWallet';
+import AccountInfo from '../components/AccountInfo';
+import SendTransaction from '../components/SendTransaction';
+
+export default function MainScreen() {
+  return (
+    <ConnectionProvider>
+      <AuthorizationProvider cluster="devnet">
+        <ScrollView style={styles.container}>
+          <ConnectWallet />
+          <AccountInfo />
+          <SendTransaction />
+        </ScrollView>
       </AuthorizationProvider>
     </ConnectionProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  shell: {
+  container: {
     flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  header: {
-    backgroundColor: 'linear-gradient(135deg, #6a4c93 0%, #00d4aa 100%)',
-    paddingVertical: 40,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    // グラデーション効果のため、実際には複数の色を重ねる
-    background: 'linear-gradient(135deg, #6a4c93 0%, #00d4aa 100%)',
-  },
-  headerText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    marginBottom: 5,
-  },
-  headerSubText: {
-    fontSize: 18,
-    color: '#000000',
-    opacity: 0.8,
+    padding: 16,
   },
 });
-
-export default App;
 ```
 
 ## ビルドと実行
 
-### 1. 依存関係の最終確認
+### Expo Template使用の場合
 
 ```bash
-# package.jsonの内容確認
-cat package.json
+# Expo Development Buildの作成
+npx expo install --fix
+npx expo run:android
 
-# node_modulesのクリーンアップ（必要に応じて）
-rm -rf node_modules
-npm install
+# または、Expo開発ビルドを作成
+eas build --platform android --profile development
 ```
 
-### 2. Android実行
+### React Native Scaffold使用の場合
 
 ```bash
-# Androidエミュレーターまたは実機の接続確認
-adb devices
-
-# Metro bundlerの起動（別ターミナル）
-npx react-native start
-
-# Androidアプリのビルドと実行
+# Androidでビルドと実行
 npx react-native run-android
+
+# メトロバンドラーを別途起動する場合
+npx react-native start
 ```
 
-### 3. iOS実行（Macのみ）
+### テスト用ウォレットアプリのインストール
 
 ```bash
-# CocoaPodsの依存関係インストール
-cd ios && pod install && cd ..
+# FakeWallet（開発用）をインストール
+# Solana Mobile GitHub ReleasesからAPKをダウンロード
+# または以下のコマンドでビルド
 
-# iOSアプリのビルドと実行
-npx react-native run-ios
+git clone https://github.com/solana-mobile/mobile-wallet-adapter.git
+cd mobile-wallet-adapter/android
+./gradlew :fakewallet:assembleDebug
+adb install fakewallet/build/outputs/apk/debug/fakewallet-debug.apk
+```
+
+## 重要な設定
+
+### Metro設定
+```javascript
+// metro.config.js
+const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
+
+const defaultConfig = getDefaultConfig(__dirname);
+
+const config = {
+  resolver: {
+    alias: {
+      crypto: 'react-native-crypto',
+      stream: 'readable-stream',
+      buffer: '@craftzdog/react-native-buffer',
+    },
+  },
+};
+
+module.exports = mergeConfig(defaultConfig, config);
+```
+
+### Polyfillの設定
+```javascript
+// index.js
+import 'react-native-get-random-values';
+import {AppRegistry} from 'react-native';
+import App from './App';
+import {name as appName} from './app.json';
+
+AppRegistry.registerComponent(appName, () => App);
 ```
 
 ## トラブルシューティング
 
-### よくある問題と解決方法
+### 1. プロジェクト作成エラー
 
-#### 0. プロジェクト作成エラー
-
-**エラー:** `template.config.js file inside "react-native" template`が見つからない
-
-**解決方法:**
-```bash
-# キャッシュクリアしてから再実行
-npm cache clean --force
-npx @react-native-community/cli@latest init SimpleSolanaMobileApp
-
-# または最も確実なExpo使用
-npx create-expo-app SimpleSolanaMobileApp --template blank-typescript
-```
-
-#### 0.1. 依存関係インストールエラー
-
-**エラー:** `npm error 404 Not Found - GET https://registry.npmjs.org/@types%2fbuffer`
-
-**解決方法:**
-```bash
-# @types/bufferは存在しないため、以下のコマンドのみ実行
-npm install buffer
-
-# bufferパッケージには既に型定義が含まれています
-# @types/bufferはインストール不要です
-```
-
-#### 1. Metro bundlerエラー
 ```bash
 # キャッシュクリア
-npx react-native start --reset-cache
+npm cache clean --force
+yarn cache clean
+
+# 最新バージョンで再試行
+yarn create expo-app MySolanaDapp --template @solana-mobile/solana-mobile-expo-template
 ```
 
-#### 2. Android gradleエラー
+### 2. ビルドエラー
+
 ```bash
-# gradleクリーンアップ
+# Android Gradle キャッシュクリア
 cd android
 ./gradlew clean
 cd ..
+
+# node_modules再インストール
+rm -rf node_modules
+yarn install
 ```
 
-#### 3. Bufferエラー
-`index.js`にBuffer polyfillが正しく設定されているか確認：
-```javascript
-import {Buffer} from 'buffer';
-global.Buffer = global.Buffer || Buffer;
-```
+### 3. Metro bundler エラー
 
-#### 4. TypeScriptエラー
 ```bash
-# TypeScript型チェック
-npx tsc --noEmit
+# Metro キャッシュクリア
+npx react-native start --reset-cache
 ```
 
-### 開発のヒント
+### 4. ウォレット接続エラー
 
-1. **デバッグ方法:**
-   - React Native Debuggerを使用
-   - `console.log`でログ出力
-   - ChromeのDeveloper Toolsでリモートデバッグ
+- **MWA対応ウォレットがインストールされているか確認**
+- **ウォレットアプリが最新バージョンか確認**
+- **デバイスがdevnetに接続されているか確認**
 
-2. **ホットリロード:**
-   - 開発中は`Ctrl+M`（Android）または`Cmd+D`（iOS）でデバッグメニューを開く
-   - "Enable Fast Refresh"を有効にする
+### 5. 一般的な依存関係の問題
 
-3. **パフォーマンス最適化:**
-   - `React.memo`でコンポーネントの再レンダリングを最適化
-   - `useCallback`と`useMemo`で計算結果をキャッシュ
+```bash
+# React Native環境診断
+npx react-native doctor
 
-### 次のステップ
+# 依存関係の強制更新
+yarn install --force
+```
 
-1. **実際のWallet Adapterの統合**
-2. **UIの改善とカスタマイズ**
-3. **エラーハンドリングの強化**
-4. **テストの追加**
-5. **アプリストアへのデプロイ**
+## 次のステップ
 
-このマニュアルに従って作業すれば、基本的なSolanaモバイルウォレットアプリを構築できます。不明な点があれば、各セクションを再確認してください。
+1. **Solana Program Library (SPL) トークンの統合**
+2. **NFTミント機能の追加**
+3. **カスタムプログラムとの統合**
+4. **本番環境用の最適化**
+5. **Google Play Storeへのデプロイ**
+
+## 参考リンク
+
+- [Solana Mobile公式ドキュメント](https://docs.solanamobile.com/)
+- [Mobile Wallet Adapter仕様](https://github.com/solana-mobile/mobile-wallet-adapter)
+- [Solana Web3.js ドキュメント](https://solana-labs.github.io/solana-web3.js/)
+- [React Native公式ドキュメント](https://reactnative.dev/)
+
+このマニュアルに従って開発すれば、Solana Mobile公式の推奨方法でアプリを構築できます。
