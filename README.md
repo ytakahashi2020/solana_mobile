@@ -1,6 +1,8 @@
-# Solana Mobile Wallet App 作成マニュアル
+# Solana Mobile Wallet App 作成マニュアル（Expo版）
 
-Solana Mobile公式ドキュメントに基づく、React Nativeでの実用的なモバイルウォレットアプリ構築ガイドです。今回作成したアプリと同じものを一から作成できます。
+Solana Mobile公式ドキュメントに基づく、**Expo**での実用的なモバイルウォレットアプリ構築ガイドです。今回作成したアプリと同じものをExpoで一から作成できます。
+
+> **注意:** Expoを使用することで、React Nativeの複雑な環境設定を回避し、より簡単にSolanaモバイルアプリを構築できます。
 
 ## 目次
 
@@ -69,18 +71,35 @@ adb devices
 
 ## プロジェクト作成とセットアップ
 
-### 1. React Nativeプロジェクトの作成
+### 1. Expo プロジェクトの作成
 
 ```bash
+# Expo CLIのインストール（グローバル）
+npm install -g @expo/cli
+
 # TypeScriptテンプレートでプロジェクト作成
-npx @react-native-community/cli@latest init SimpleSolanaMobileApp --template react-native-template-typescript
+npx create-expo-app SimpleSolanaMobileApp --template blank-typescript
 
 # プロジェクトディレクトリに移動
 cd SimpleSolanaMobileApp
 
-# Yarnで依存関係を管理（推奨）
-rm package-lock.json
-yarn install
+# 依存関係をインストール
+npm install
+```
+
+### 1.1. Expo開発ビルド設定
+
+Solana関連パッケージはカスタムネイティブコードを含むため、Expo開発ビルドが必要です：
+
+```bash
+# EAS CLIのインストール
+npm install -g eas-cli
+
+# EAS設定の初期化
+eas build:configure
+
+# eas.jsonが作成されることを確認
+cat eas.json
 ```
 
 ### 2. プロジェクト構造の作成
@@ -126,30 +145,62 @@ SimpleSolanaMobileApp/
 
 ```bash
 # 必須のSolana Mobile Wallet Adapterパッケージ
-yarn add @solana-mobile/mobile-wallet-adapter-protocol
-yarn add @solana-mobile/mobile-wallet-adapter-protocol-web3js
+npm install @solana-mobile/mobile-wallet-adapter-protocol
+npm install @solana-mobile/mobile-wallet-adapter-protocol-web3js
 
 # Solana Web3.js
-yarn add @solana/web3.js
+npm install @solana/web3.js
 
-# React Native用polyfills
-yarn add buffer
-yarn add react-native-get-random-values
-yarn add react-native-url-polyfill
-yarn add text-encoding
+# Expo/React Native用polyfills
+npm install expo-crypto
+npm install expo-clipboard
+npm install @craftzdog/react-native-buffer
+npm install react-native-get-random-values
 ```
 
-### 2. React Native UI関連パッケージ
+### 2. Expo UI関連パッケージ
 
 ```bash
-# クリップボード機能
-yarn add @react-native-clipboard/clipboard
-
 # セーフエリア対応
-yarn add react-native-safe-area-context
+npm install react-native-safe-area-context
 
-# TypeScript開発依存関係
-yarn add -D typescript @types/react @types/react-native
+# Expo開発ビルド用設定ファイル
+npx expo install --fix
+```
+
+### 3. Expo設定プラグイン
+
+`app.json`または`app.config.js`に以下の設定を追加：
+
+```json
+{
+  "expo": {
+    "name": "SimpleSolanaMobileApp",
+    "slug": "simple-solana-mobile-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "platforms": ["android"],
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "permissions": [
+        "android.permission.INTERNET"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 23
+          }
+        }
+      ]
+    ]
+  }
+}
 ```
 
 ### 3. Android権限設定
@@ -169,44 +220,39 @@ yarn add -D typescript @types/react @types/react-native
 
 ### 1. Metro設定
 
-`metro.config.js`を以下の内容で作成：
+`metro.config.js`を以下の内容で作成（Expo用）：
 
 ```javascript
-const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
+const { getDefaultConfig } = require('expo/metro-config');
 
-const defaultConfig = getDefaultConfig(__dirname);
+const config = getDefaultConfig(__dirname);
 
-const config = {
-  resolver: {
-    alias: {
-      crypto: 'react-native-crypto',
-      stream: 'readable-stream',
-      buffer: '@craftzdog/react-native-buffer',
-    },
-  },
+// Solana用polyfill設定
+config.resolver.alias = {
+  crypto: '@craftzdog/react-native-buffer',
+  stream: 'stream-browserify',
+  buffer: '@craftzdog/react-native-buffer',
 };
 
-module.exports = mergeConfig(defaultConfig, config);
+module.exports = config;
 ```
 
 ### 2. Polyfill設定
 
-`index.js`を以下のように更新：
+`App.tsx`の最初に以下のimportを追加：
 
-```javascript
+```typescript
+// Polyfills for Solana Web3.js
 import 'react-native-get-random-values';
-import 'react-native-url-polyfill/auto';
-import 'text-encoding';
+import { Buffer } from '@craftzdog/react-native-buffer';
 
-import {AppRegistry} from 'react-native';
-import App from './App';
-import {name as appName} from './app.json';
-
-// Buffer polyfill
-import {Buffer} from 'buffer';
+// グローバルBufferの設定
 global.Buffer = global.Buffer || Buffer;
 
-AppRegistry.registerComponent(appName, () => App);
+// その他のimport...
+import React from 'react';
+import { StatusBar } from 'expo-status-bar';
+// ... 以下のコンポーネントimport
 ```
 
 ### 3. TypeScript設定
@@ -488,7 +534,7 @@ const styles = StyleSheet.create({
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL, sendAndConfirmTransaction } from '@solana/web3.js';
-import Clipboard from '@react-native-clipboard/clipboard';
+import * as Clipboard from 'expo-clipboard';
 
 type MockAccount = {
   address: string;
@@ -510,7 +556,7 @@ export default function MockSendButton({ mockAccount, connection, onSendComplete
 
   const pasteFromClipboard = async () => {
     try {
-      const clipboardText = await Clipboard.getString();
+      const clipboardText = await Clipboard.getStringAsync();
       setRecipientAddress(clipboardText);
     } catch (error) {
       Alert.alert('エラー', 'クリップボードから貼り付けできませんでした');
@@ -901,58 +947,78 @@ const styles = StyleSheet.create({
 
 ## ビルドと実行
 
-### 1. 開発サーバーの起動
+### 1. 開発用ビルドの作成
+
+Solanaパッケージを使用するため、Expo開発ビルドが必要です：
 
 ```bash
-# Metro bundlerを起動
-yarn start
+# EASにログイン（Expoアカウントが必要）
+eas login
 
-# または
-npx react-native start
+# 開発ビルドの作成（Android）
+eas build --profile development --platform android
+
+# ビルド完了後、APKをダウンロードしてデバイスにインストール
 ```
 
-### 2. Androidでの実行
+### 2. 開発サーバーの起動
 
 ```bash
-# Androidエミュレーターまたは実機での実行
-yarn android
+# Expo開発サーバーを起動
+npx expo start --dev-client
 
 # または
-npx react-native run-android
+npm start
 ```
 
-### 3. デバッグとテスト
+### 3. デバイスでの実行
+
+1. **開発ビルドAPKをインストール** - EASで作成したAPKをデバイスにインストール
+2. **Expo開発サーバーに接続** - アプリを開いてQRコードをスキャンするかIPアドレスで接続
+
+### 4. デバッグとテスト
 
 ```bash
-# デバッグ用ログの確認
-npx react-native log-android
+# ログの確認
+npx expo start --dev-client
 
 # リロード（開発中）
-# デバイスでR キーを2回押すか、Cmd+R（シミュレーター）
+# デバイスでアプリをシェイクしてデバッグメニューを開く
 ```
 
 ## トラブルシューティング
 
 ### 1. 一般的なエラー
 
-#### Metro bundler エラー
+#### Expo Metro bundler エラー
 ```bash
 # キャッシュクリア
-yarn start --reset-cache
+npx expo start --clear
 ```
 
-#### Android ビルドエラー
+#### EAS ビルドエラー
 ```bash
-# Gradleクリーンアップ
-cd android && ./gradlew clean && cd ..
-yarn android
+# 依存関係の問題の場合
+npm install --legacy-peer-deps
+
+# ビルド再実行
+eas build --profile development --platform android --clear-cache
 ```
 
 #### 依存関係エラー
 ```bash
 # node_modules 再インストール
-rm -rf node_modules yarn.lock
-yarn install
+rm -rf node_modules package-lock.json
+npm install
+```
+
+#### 開発ビルドが見つからない
+```bash
+# 開発ビルドを再作成
+eas build --profile development --platform android
+
+# または、プロファイルを確認
+cat eas.json
 ```
 
 ### 2. Solana関連エラー
@@ -965,15 +1031,28 @@ yarn install
 - `index.js`のpolyfill設定を確認
 - `metro.config.js`のalias設定を確認
 
-### 3. React Native環境診断
+### 3. Expo環境診断
 
 ```bash
-# 環境確認
-npx react-native doctor
+# Expo環境確認
+npx expo doctor
 
 # Android環境確認
 adb devices
+
+# EAS設定確認
+eas build:list
 ```
+
+### 4. Expo特有の問題
+
+#### Solanaパッケージエラー
+- **問題:** Expo Goでは動作しない
+- **解決:** 必ずEAS開発ビルドを使用
+
+#### Buffer/Cryptoエラー
+- **解決:** `@craftzdog/react-native-buffer`と`expo-crypto`を使用
+- **metro.config.js**のalias設定を確認
 
 ## 機能拡張のアイデア
 
@@ -1009,11 +1088,44 @@ const realWalletConnect = async () => {
 - **QRコードスキャナー**
 - **マルチウォレット対応**
 
+## Expo特有の利点
+
+### 1. 簡単なセットアップ
+- **Android Studio不要** - EASがクラウドでビルド
+- **複雑な環境設定不要** - Expoが依存関係を管理
+- **クロスプラットフォーム** - iOS/Android両対応
+
+### 2. 開発効率
+- **ホットリロード** - コード変更が即座に反映
+- **デバッグツール** - Expo DevToolsで簡単デバッグ
+- **Over-the-Air更新** - アプリストア経由なしで更新
+
+### 3. デプロイメント
+```bash
+# 本番ビルドの作成
+eas build --platform android
+
+# アプリストア提出用ビルド
+eas submit --platform android
+```
+
+## 注意事項
+
+### 1. Expo制限事項
+- **カスタムネイティブコード** - 開発ビルドが必要
+- **Expo Go制限** - SolanaパッケージはExpo Goで動作しない
+- **ビルド時間** - EASビルドには時間がかかる場合がある
+
+### 2. Expoアカウント
+- **EAS使用** - Expoアカウントが必要
+- **ビルド制限** - 無料プランには月間ビルド制限あり
+
 ## 参考リンク
 
 - [Solana Mobile公式ドキュメント](https://docs.solanamobile.com/)
+- [Expo公式ドキュメント](https://docs.expo.dev/)
+- [EAS Build](https://docs.expo.dev/build/introduction/)
 - [Mobile Wallet Adapter仕様](https://github.com/solana-mobile/mobile-wallet-adapter)
 - [Solana Web3.js](https://solana-labs.github.io/solana-web3.js/)
-- [React Native公式ドキュメント](https://reactnative.dev/)
 
-このマニュアルに従って実装すれば、今回作成したものと全く同じSolanaモバイルウォレットアプリを構築できます。
+このExpo版マニュアルに従って実装すれば、React NativeやAndroid環境の複雑な設定なしに、今回作成したものと同じSolanaモバイルウォレットアプリを構築できます。
