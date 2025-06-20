@@ -134,8 +134,8 @@ npm install @react-native-clipboard/clipboard
 # AsyncStorage（データ永続化）
 npm install @react-native-async-storage/async-storage
 
-# 開発用依存関係
-npm install --save-dev @types/buffer
+# 注意: @types/bufferは存在しないパッケージです
+# bufferパッケージには既に型定義が含まれているため不要
 ```
 
 ### 3. Metro設定（重要）
@@ -914,6 +914,19 @@ npx @react-native-community/cli@latest init SimpleSolanaMobileApp
 
 # または最も確実なExpo使用
 npx create-expo-app SimpleSolanaMobileApp --template blank-typescript
+```
+
+#### 0.1. 依存関係インストールエラー
+
+**エラー:** `npm error 404 Not Found - GET https://registry.npmjs.org/@types%2fbuffer`
+
+**解決方法:**
+```bash
+# @types/bufferは存在しないため、以下のコマンドのみ実行
+npm install buffer
+
+# bufferパッケージには既に型定義が含まれています
+# @types/bufferはインストール不要です
 ```
 
 #### 1. Metro bundlerエラー
