@@ -73,7 +73,7 @@ source ~/.bashrc  # または source ~/.zshrc
 
 ```bash
 # プロジェクト作成（TypeScript使用）
-npx react-native init SimpleSolanaMobileApp --template react-native-template-typescript
+npx @react-native-community/cli init SimpleSolanaMobileApp --template react-native-template-typescript
 
 # プロジェクトディレクトリに移動
 cd SimpleSolanaMobileApp
