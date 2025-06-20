@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.solanamobile.com)",
+      "Bash(npx react-native init:*)",
+      "Bash(npx @react-native-community/cli init:*)",
+      "Bash(yarn install)",
+      "Bash(npx react-native:*)",
+      "Bash(./gradlew:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(adb install:*)",
+      "Bash(adb shell input keyevent:*)",
+      "Bash(adb shell input text:*)",
+      "Bash(yarn add:*)",
+      "Bash(yarn:*)",
+      "Bash(adb uninstall:*)",
+      "Bash(adb shell:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(rg:*)",
+      "Bash(grep:*)",
+      "Bash(git remote add:*)"
+    ],
+    "deny": []
+  }
+}
